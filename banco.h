@@ -14,3 +14,4 @@ void escolheoperacao(int codConta);
 void determinaacao(int* temconta, int* codConta);
 void cabecalho();
 int existeConta(int codConta);
+void menuColaborador();

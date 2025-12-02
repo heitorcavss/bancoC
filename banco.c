@@ -90,7 +90,6 @@ void depositaValor(int codConta, double valor){
             contaLida.saldo = contaLida.saldo + valor;
             fseek(f, -sizeof(CONTA), SEEK_CUR);
             fwrite(&contaLida, sizeof(CONTA), 1, f);
-            printf("Depósito de R$ %.2f realizado com sucesso!\n", valor);
             achouConta = 1;
             break;
         }
@@ -117,7 +116,6 @@ int saque(double qtdSaque, int codConta){
                 contaLida.saldo = contaLida.saldo - qtdSaque;
                 fseek(f, -sizeof(CONTA), SEEK_CUR);
                 fwrite(&contaLida, sizeof(CONTA), 1, f);
-                printf("Saque de R$ %.2f realizado com sucesso!\n", qtdSaque);
                 printf("Seu saldo atual é: R$ %.2f\n", contaLida.saldo);
                 fclose(f);
                 return 1;
@@ -142,8 +140,15 @@ void cabecalho(){
 }
 
 void determinaacao(int* temconta, int* codConta){
-    printf("Você já possui uma conta? (1-sim / 2-não / 3- Sou colaborador): ");
-    scanf("%d", temconta);
+    printf("Você já possui uma conta? (1- Sim / 2- Não / 3- Sou colaborador): ");
+    
+    if(scanf("%d", temconta) == 0) {
+        printf("Opção inválida! Digite números.\n");
+        while(getchar() != '\n'); // Limpa sujeira
+        *temconta = -1; // Valor inválido pra não entrar em nada
+        return;
+    }
+    
     if(*temconta == 1){
         printf("Digite o código da sua conta: ");
         scanf(" %d", codConta);
@@ -152,14 +157,26 @@ void determinaacao(int* temconta, int* codConta){
         printf("Iniciando processo de criação de conta...\n");
         criaconta();
     }else if(*temconta == 3){
-        printf("Digite seu acesso para colaboradores: \n");
-        scanf(" %d", codConta);
-        if(*codConta == 1011956 || *codConta == 1012018){
-            printf("Acesso concedido.\n");
-        }else{
-            printf("Acesso negado. Código inválido.\n");
-            exit(1);
-        }
+        int colaborador = 0;
+        do{
+            printf("Digite seu acesso para colaboradores: \n");
+            
+            if(scanf(" %d", codConta) == 0) {
+                    printf("Erro: Digite apenas números!\n");
+                    while(getchar() != '\n'); // <--- A MÁGICA DE LIMPEZA AQUI
+                    continue; // Volta pro inicio do loop
+                }
+                
+                if(*codConta == 0) break;
+
+            if(*codConta == 1029591 || *codConta == 1027386){
+                printf("Acesso concedido.\n");
+                colaborador = 1;
+            }else{
+                printf("Acesso negado. Código inválido, tente novamente.\n");
+            } 
+        }while(colaborador == 0);
+
     }else{
         printf("Opção inválida. Por favor, tente novamente.\n");
     }
@@ -168,32 +185,33 @@ void determinaacao(int* temconta, int* codConta){
 
 void escolheoperacao(int codConta){
     char acao;
-    printf("O que deseja fazer? D-depositar / S-sacar / T- transferir: \n");
+    printf("O que deseja fazer? D-depositar / S-sacar / T- transferir/ X-sair: \n");
     scanf(" %c", &acao);
     
     switch(acao){
         case 'D':
         case 'd':
         // anotar esse escopo do switch 
-        if(codConta == 1011956 || codConta == 1012018){
-        printf("Ação inválida para este usuário.\n");
-        break;
-        }
-        {
-        double valorDeposito = 0.0;
-        printf("Digite o valor a ser depositado: R$ ");
-        scanf(" %lf", &valorDeposito);
-        if(valorDeposito <= 0){
-            printf("Valor de depósito inválido.\n");
+        if(codConta == 1029591 || codConta == 1027386){
+            printf("Ação inválida para este usuário.\n");
             break;
         }
-        depositaValor(codConta, valorDeposito);
-        break;
-    }
-    
+        {
+            double valorDeposito = 0.0;
+            printf("Digite o valor a ser depositado: R$ ");
+            scanf(" %lf", &valorDeposito);
+            if(valorDeposito <= 0){
+                printf("Valor de depósito inválido.\n");
+                break;
+            }
+            depositaValor(codConta, valorDeposito);
+            printf("Depósito de R$ %.2f realizado com sucesso!\n", valorDeposito);
+            break;
+        }
+        
         case 's':
         case 'S':
-            if(codConta == 1011956 || codConta == 1012018){
+        if(codConta == 1029591 || codConta == 1027386){
             printf("Ação inválida para este usuário.\n");
             break;
         }
@@ -206,32 +224,46 @@ void escolheoperacao(int codConta){
                 break;
             }
             saque(valorSaque, codConta);
+            printf("Saque de R$ %.2f realizado com sucesso!\n", valorSaque);
             break;
         }
     
         case 't':
         case 'T':
-        if(codConta == 1011956 || codConta == 1012018){
+        if(codConta == 1029591 || codConta == 1027386){
             printf("Ação inválida para este usuário.\n");
             break;
         }
         {
             int contaDestino;
             double valorTransf = 0.0;
+            int validacao = 0;
+            do{
             printf("Digite o número da conta destino: ");
-            scanf(" %d", &contaDestino);
+            if(scanf(" %d", &contaDestino) == 0) {
+                    printf("Erro: Digite apenas números!\n");
+                    while(getchar() != '\n'); // <--- A MÁGICA DE LIMPEZA AQUI
+                    continue; // Volta pro inicio do loop
+                }
+                
+            
+            if(contaDestino == 0) break;
+
             if(contaDestino == codConta){
                 printf("Não é possível transferir para a mesma conta.\n");
-                break;
+                continue;
             }
-            if (contaDestino == 1011956 || contaDestino == 1012018) {
+            if (contaDestino == 1029591 || contaDestino == 1027386) {
             printf("Conta destino proibida para transferências.\n");
-            break;
+            continue;
 }
             if(!existeConta(contaDestino)){
                 printf("Conta destino não existe.\n");
-                break;
+                continue;
             }
+            validacao = 1;
+        }while(validacao == 0);
+
             printf("Digite o valor a ser transferido: R$ ");
             scanf(" %lf", &valorTransf);
             if(valorTransf <= 0){
@@ -245,15 +277,11 @@ void escolheoperacao(int codConta){
             break;
         }
     
-        case 'L':
-        case 'l':
-        if(codConta == 1011956 || codConta == 1012018){
-        listarContas();
-    }else{
-        printf("Ação inválida para este usuário.\n");  
-    }
-        break;
-    
+        case 'X':
+        case 'x':
+        printf("Saindo...\n");    
+        exit(0);
+
         default:
         printf("Ação inválida. Por favor, tente novamente.\n");
         break;
@@ -261,40 +289,56 @@ void escolheoperacao(int codConta){
 }
 
 int existeConta(int codConta){
- FILE* f;
- f = fopen("banco.dat", "rb");
-if (f == NULL){
-    printf("Erro no banco de dados!\n");
-    exit(1);
+    FILE* f;
+    f = fopen("banco.dat", "rb");
+    if (f == NULL){
+        printf("Erro no banco de dados!\n");
+        exit(1);
+    }
+    
+    CONTA contaLida;
+    while(fread(&contaLida, sizeof(CONTA), 1, f)){
+        if(codConta == contaLida.numConta){
+            fclose(f);
+            return 1; // Conta existe
+        }
+    }
+    fclose(f);
+    return 0; // Conta não existe
 }
 
-CONTA contaLida;
-while(fread(&contaLida, sizeof(CONTA), 1, f)){
-    if(codConta == contaLida.numConta){
-        fclose(f);
-        return 1; // Conta existe
+void menuColaborador(){
+    char acao;
+    do{
+    printf("Menu do Colaborador:\n");
+    printf("L - Listar todas as contas\n");
+    printf("S - Sair\n");
+    printf("Digite a ação desejada: \n");
+    scanf(" %c", &acao);
+    if(acao == 'L' || acao == 'l'){
+        listarContas();
     }
-}
-fclose(f);
-return 0; // Conta não existe
+    }while(acao != 'S' && acao != 's');
+
+
 }
 
 int main() {
     int temconta;
     int codConta;
     
-
     srand(time(0));
     cabecalho();
-    INICIO:
+    while(1){
     determinaacao(&temconta, &codConta);
-    if(temconta == 1 || temconta == 3){
-    escolheoperacao(codConta);
+    if(temconta == 1){
+        escolheoperacao(codConta);
+    }else if (temconta == 3){
+        menuColaborador();
     }else{
-    printf("Retornando ao menu inicial...\n");
-    goto INICIO;
+        printf("Retornando ao menu inicial...\n");
     }
+}
     
-
- return 0;
+    return 0;
 }
